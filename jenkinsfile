@@ -41,9 +41,9 @@ pipeline {
         stage('Reload Nginx') {
             steps {
                 bat """
-                net stop nginx
-                net start nginx
+                "C:/nginx-1.29.4/nginx.exe" -s reload
                 """
+
             }
         }
     }
