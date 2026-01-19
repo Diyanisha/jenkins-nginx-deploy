@@ -2,12 +2,10 @@ pipeline {
     agent any
 
     environment {
-    NGINX_HTML = "C:\\nginx-1.29.4\\html"
-}
-
+        NGINX_HTML = "C:/nginx-1.29.4/html"
+    }
 
     stages {
-
         stage('Checkout from Git') {
             steps {
                 git branch: 'main',
@@ -17,34 +15,35 @@ pipeline {
 
         stage('Clean Nginx HTML Directory') {
             steps {
-                sh '''
-                sudo rm -rf ${NGINX_HTML}/*
-                '''
+                bat """
+                if exist "${NGINX_HTML}\\*" (
+                    rmdir /S /Q "${NGINX_HTML}"
+                )
+                mkdir "${NGINX_HTML}"
+                """
             }
         }
 
         stage('Copy Files to Nginx HTML') {
             steps {
-                sh '''
-                sudo cp -r * ${NGINX_HTML}/
-                '''
+                bat """
+                xcopy /E /Y "%WORKSPACE%\\*" "${NGINX_HTML}\\"
+                """
             }
         }
 
         stage('Set Permissions') {
             steps {
-                sh '''
-                sudo chown -R nginx:nginx ${NGINX_HTML} || sudo chown -R www-data:www-data ${NGINX_HTML}
-                sudo chmod -R 755 ${NGINX_HTML}
-                '''
+                echo "Permissions on Windows Nginx usually handled by admin user."
             }
         }
 
         stage('Reload Nginx') {
             steps {
-                sh '''
-                sudo systemctl reload nginx
-                '''
+                bat """
+                net stop nginx
+                net start nginx
+                """
             }
         }
     }
