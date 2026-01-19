@@ -1,0 +1,59 @@
+pipeline {
+    agent any
+
+    environment {
+        NGINX_HTML = "C:\nginx-1.29.4\html"
+    }
+
+    stages {
+
+        stage('Checkout from Git') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/Diyanisha/jenkins-nginx-deploy.git'
+            }
+        }
+
+        stage('Clean Nginx HTML Directory') {
+            steps {
+                sh '''
+                sudo rm -rf ${NGINX_HTML}/*
+                '''
+            }
+        }
+
+        stage('Copy Files to Nginx HTML') {
+            steps {
+                sh '''
+                sudo cp -r * ${NGINX_HTML}/
+                '''
+            }
+        }
+
+        stage('Set Permissions') {
+            steps {
+                sh '''
+                sudo chown -R nginx:nginx ${NGINX_HTML} || sudo chown -R www-data:www-data ${NGINX_HTML}
+                sudo chmod -R 755 ${NGINX_HTML}
+                '''
+            }
+        }
+
+        stage('Reload Nginx') {
+            steps {
+                sh '''
+                sudo systemctl reload nginx
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Deployment to Nginx successful!"
+        }
+        failure {
+            echo "Deployment failed!"
+        }
+    }
+}
